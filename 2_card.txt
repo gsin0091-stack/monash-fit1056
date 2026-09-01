@@ -1,0 +1,6 @@
+========================
+  MUSIC SCHOOL ID BADGE
+========================
+ID: 2
+Name: guri
+Instrument: piano

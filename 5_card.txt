@@ -1,0 +1,6 @@
+========================
+  MUSIC SCHOOL ID BADGE
+========================
+ID: 5
+Name: john
+Instrument: guitar
