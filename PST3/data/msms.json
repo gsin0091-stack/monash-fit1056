@@ -1,0 +1,58 @@
+{
+    "students": [
+        {
+            "id": 2,
+            "name": "guri",
+            "enrolled_course_ids": [1]
+        },
+        {
+            "id": 3,
+            "name": "guri",
+            "enrolled_course_ids": [1]
+        },
+        {
+            "id": 5,
+            "name": "Charlie",
+            "enrolled_course_ids": [2]
+        }
+    ],
+    "teachers": [
+        {
+            "id": 1,
+            "name": "Jordan Lee",
+            "speciality": "Piano"
+        },
+        {
+            "id": 2,
+            "name": "Amara Singh",
+            "speciality": "Flute"
+        }
+    ],
+    "courses": [
+        {
+            "id": 1,
+            "name": "Piano Basics",
+            "instrument": "Piano",
+            "teacher_id": 1,
+            "enrolled_student_ids": [2, 3],
+            "lessons": [
+                {"lesson_id": 1, "day": "Monday", "start_time": "16:00", "room": "Room A"},
+                {"lesson_id": 2, "day": "Wednesday", "start_time": "16:00", "room": "Room A"}
+            ]
+        },
+        {
+            "id": 2,
+            "name": "Flute Foundations",
+            "instrument": "Flute",
+            "teacher_id": 2,
+            "enrolled_student_ids": [5],
+            "lessons": [
+                {"lesson_id": 3, "day": "Tuesday", "start_time": "15:00", "room": "Room B"}
+            ]
+        }
+    ],
+    "attendance": [],
+    "next_student_id": 6,
+    "next_teacher_id": 3,
+    "next_course_id": 3
+}
