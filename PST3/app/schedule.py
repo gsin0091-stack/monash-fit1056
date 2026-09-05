@@ -154,3 +154,80 @@ class ScheduleManager:
         self._save_data()
         print(f"Success: {student.name} switched from {from_course.name} to {to_course.name}.")
         return True
+
+    def add_student(self, name):
+        """Adds a student dictionary to the data store."""
+        # use the current counter as the new id, then bump it up for next time
+        student = StudentUser(self.next_student_id, name)
+        self.students.append(student)
+        self.next_student_id += 1
+        self._save_data()
+        print(f"Core: Student '{name}' added with ID {student.id}.")
+
+    def add_teacher(self, name, speciality):
+        """Adds a teacher dictionary to the data store."""
+        teacher = TeacherUser(self.next_teacher_id, name, speciality)
+        self.teachers.append(teacher)
+        self.next_teacher_id += 1
+        self._save_data()
+        print(f"Core: Teacher '{name}' added.")
+
+    def remove_student(self, student_id):
+        """Removes a student from the data store."""
+        student = self.find_student_by_id(student_id)
+        if not student:
+            print(f"Error: Student with ID {student_id} not found.")
+            return False
+        # .remove() takes the object itself out of the list
+        self.students.remove(student)
+        self._save_data()
+        print(f"Student {student_id} removed.")
+        return True
+
+    def remove_teacher(self, teacher_id):
+        """Removes a teacher from the data store."""
+        teacher = self.find_teacher_by_id(teacher_id)
+        if not teacher:
+            print(f"Error: Teacher with ID {teacher_id} not found.")
+            return False
+        self.teachers.remove(teacher)
+        self._save_data()
+        print(f"Teacher {teacher_id} removed.")
+        return True
+
+    def update_student(self, student_id, name=None):
+        """Finds a student by ID and updates their name if a new one is given."""
+        student = self.find_student_by_id(student_id)
+        if not student:
+            print(f"Error: Student with ID {student_id} not found.")
+            return False
+        # only change the name if the caller actually gave us a new one
+        if name:
+            student.name = name
+        self._save_data()
+        print(f"Student {student_id} updated.")
+        return True
+
+    def update_teacher(self, teacher_id, name=None, speciality=None):
+        """Finds a teacher by ID and updates their info if new values are given."""
+        teacher = self.find_teacher_by_id(teacher_id)
+        if not teacher:
+            print(f"Error: Teacher with ID {teacher_id} not found.")
+            return False
+        if name:
+            teacher.name = name
+        if speciality:
+            teacher.speciality = speciality
+        self._save_data()
+        print(f"Teacher {teacher_id} updated.")
+        return True
+
+    def add_course(self, name, instrument, teacher_id):
+        """Adds a new course to the data store."""
+        # same idea as add_student/add_teacher, just for courses
+        course = Course(self.next_course_id, name, instrument, teacher_id)
+        self.courses.append(course)
+        self.next_course_id += 1
+        self._save_data()
+        print(f"Course '{name}' added with ID {course.id}.")
+        return course

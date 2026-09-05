@@ -56,6 +56,37 @@ def list_courses(manager):
         print(f"  ID: {c.id}, Name: {c.name}, Instrument: {c.instrument}, "
               f"Teacher ID: {c.teacher_id}, Enrolled: {c.enrolled_student_ids}")
 
+def list_students_in_course(manager, course_id):
+    """Shows every student enrolled in a given course."""
+    course = manager.find_course_by_id(course_id)
+    if not course:
+        print(f"Error: Course with ID {course_id} not found.")
+        return
+    if not course.enrolled_student_ids:
+        print("No students enrolled in this course.")
+        return
+    print(f"\n--- Students Enrolled in {course.name} ---")
+    # a course only stores student ids, so look each one up to get their name
+    for student_id in course.enrolled_student_ids:
+        student = manager.find_student_by_id(student_id)
+        if student:
+            print(f"  ID: {student.id}, Name: {student.name}")
+
+def print_student_card(manager, student_id):
+    """Creates a text file badge for a student, same idea as PST2."""
+    student = manager.find_student_by_id(student_id)
+    if not student:
+        print(f"Error: Could not print card, student {student_id} not found.")
+        return
+    filename = f"{student_id}_card.txt"
+    with open(filename, 'w') as f:
+        f.write("========================\n")
+        f.write("  MUSIC SCHOOL ID BADGE\n")
+        f.write("========================\n")
+        f.write(f"ID: {student.id}\n")
+        f.write(f"Name: {student.name}\n")
+    print(f"Printed student card to {filename}.")
+
 def main():
     """Main function to run the MSMS application."""
     manager = ScheduleManager() # Create ONE instance of the application brain.
@@ -70,6 +101,15 @@ def main():
         print("4. List students")
         print("5. List teachers")
         print("6. List courses")
+        print("7. Add student")
+        print("8. Add teacher")
+        print("9. Remove student")
+        print("10. Remove teacher")
+        print("11. Update student name")
+        print("12. Update teacher info")
+        print("13. Add course")
+        print("14. List students in a course")
+        print("15. Print student card")
         print("q. Quit")
         choice = input("Enter choice: ").strip()
         if choice == '1':
@@ -97,6 +137,60 @@ def main():
             list_teachers(manager)
         elif choice == '6':
             list_courses(manager)
+        elif choice == '7':
+            name = input("Enter student name: ").strip()
+            manager.add_student(name)
+        elif choice == '8':
+            name = input("Enter teacher name: ").strip()
+            spec = input("Enter speciality: ").strip()
+            manager.add_teacher(name, spec)
+        elif choice == '9':
+            s_id = input("Enter student ID to remove: ").strip()
+            if s_id.isdigit():
+                manager.remove_student(int(s_id))
+            else:
+                print("Error: Student ID must be a number.")
+        elif choice == '10':
+            t_id = input("Enter teacher ID to remove: ").strip()
+            if t_id.isdigit():
+                manager.remove_teacher(int(t_id))
+            else:
+                print("Error: Teacher ID must be a number.")
+        elif choice == '11':
+            s_id = input("Enter student ID to update: ").strip()
+            new_name = input("Enter new name: ").strip()
+            if s_id.isdigit():
+                manager.update_student(int(s_id), name=new_name)
+            else:
+                print("Error: Student ID must be a number.")
+        elif choice == '12':
+            t_id = input("Enter teacher ID to update: ").strip()
+            new_name = input("Enter new name (leave blank to skip): ").strip()
+            new_spec = input("Enter new speciality (leave blank to skip): ").strip()
+            if t_id.isdigit():
+                manager.update_teacher(int(t_id), name=new_name, speciality=new_spec)
+            else:
+                print("Error: Teacher ID must be a number.")
+        elif choice == '13':
+            name = input("Enter course name: ").strip()
+            inst = input("Enter instrument: ").strip()
+            t_id = input("Enter teacher ID: ").strip()
+            if t_id.isdigit():
+                manager.add_course(name, inst, int(t_id))
+            else:
+                print("Error: Teacher ID must be a number.")
+        elif choice == '14':
+            c_id = input("Enter course ID: ").strip()
+            if c_id.isdigit():
+                list_students_in_course(manager, int(c_id))
+            else:
+                print("Error: Course ID must be a number.")
+        elif choice == '15':
+            s_id = input("Enter student ID: ").strip()
+            if s_id.isdigit():
+                print_student_card(manager, int(s_id))
+            else:
+                print("Error: Student ID must be a number.")
         elif choice.lower() == 'q':
             break
         else:
