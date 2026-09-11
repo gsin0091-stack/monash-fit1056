@@ -28,7 +28,7 @@ enrol an existing student, look up students/teachers by name or speciality,
 and list all students/teachers.
 
 **How to run:**
-```bash
+```
 cd PST1
 python MSMS.py
 ```
@@ -47,7 +47,7 @@ printing a student ID card to a text file, and updating/removing
 students and teachers.
 
 **How to run:**
-```bash
+```
 cd PST2
 python pst2_main.py
 ```
@@ -89,7 +89,7 @@ PST3/
 `main.py` loads data using the relative path `data/msms.json`, so it must
 be run from inside `PST3/`:
 
-```bash
+```
 cd PST3
 python main.py
 ```
@@ -103,20 +103,21 @@ python main.py
 4.  List students
 5.  List teachers
 6.  List courses
-7.  Add student                 } ported from PST2's add_student/add_teacher,
+7.  Add student                 } from PST2's add_student/add_teacher,
 8.  Add teacher                 } rebuilt to create real objects instead of dicts
-9.  Remove student               } ported from PST2's remove_student/remove_teacher
+9.  Remove student               } from PST2's remove_student/remove_teacher
 10. Remove teacher                }
-11. Update student name           } ported from PST2's update_student/update_teacher
+11. Update student name           } from PST2's update_student/update_teacher
 12. Update teacher info            }
 13. Add course                   - same add/next-id pattern as add_student/add_teacher
 14. List students in a course    - looks up every student enrolled in one course
 15. Print student card           - writes a text file badge, same as PST2's version
+16. Enrol student in course      - enrols a student in a course for the first time
 q.  Quit
 ```
 
-Options 1-6 are the core PST3 requirements. Options 7-15 go beyond the
-brief, porting PST2's student/teacher management features into the new
+Options 1-6 are the core PST3 requirements. Options 7-16 go beyond the
+brief, taking PST2's student/teacher management features into the new
 object-oriented structure.
 
 ### Design choices and assumptions
@@ -132,12 +133,9 @@ object-oriented structure.
 - **Every method that changes data saves immediately** (`self._save_data()`
   at the end of `check_in`, `switch_student_course`, `add_student`, etc.)
   rather than batching saves, so the JSON file is always up to date.
-- **No cross-reference validation on delete** - removing a teacher who
-  still teaches a course, or a student who's still enrolled somewhere,
-  isn't blocked or cleaned up automatically. This matches PST2's original
-  behaviour (which had the same gap) and is a known limitation rather
-  than an oversight.
-
+- **Removing a student cleans up after them, removing a teacher doesn't.**
+  `remove_student` strips the student's ID out of every course's
+  `enrolled_student_ids` before deleting them.
 ### How to test
 
 Run `python main.py` from inside `PST3/` and work through the menu, e.g.:
@@ -149,5 +147,8 @@ Run `python main.py` from inside `PST3/` and work through the menu, e.g.:
    `data/msms.json` to see the new attendance record was saved.
 4. `3` to switch a student between courses, then `6` to confirm both
    courses' enrolment lists updated.
-5. `7`/`8`/`13` to add a student, teacher, and course, then `14` to list
-   who's enrolled in a course.
+5. `7`/`8`/`13` to add a student, teacher, and course, then `16` to enrol
+   the new student in a course, and `14` to confirm they show up as
+   enrolled.
+6. `9` to remove a student who's enrolled in a course, then `6` to
+   confirm they're gone from that course's enrolled list too.
