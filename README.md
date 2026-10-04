@@ -1,7 +1,7 @@
 # MSMS - Music School Management System
 
-FIT1056 Problem Solving Tasks (PST1-PST3): a Music School Management System
-built up over three stages, each one a direct upgrade of the last.
+FIT1056 Problem Solving Tasks (PST1-PST4): a Music School Management System
+built up over four stages, each one a direct upgrade of the last.
 
 ## Project Structure
 
@@ -9,7 +9,8 @@ built up over three stages, each one a direct upgrade of the last.
 msms-project/
 ├── PST1/   The Foundation - simple in-memory prototype
 ├── PST2/   The Upgrade - file storage (JSON) and validation
-└── PST3/   The Architecture - Object-Oriented redesign
+├── PST3/   The Architecture - Object-Oriented redesign
+└── PST4/   The User Interface - Streamlit GUI on top of PST3
 ```
 
 Each folder is a self-contained stage - later stages build on the ideas of
@@ -152,3 +153,145 @@ Run `python main.py` from inside `PST3/` and work through the menu, e.g.:
    enrolled.
 6. `9` to remove a student who's enrolled in a course, then `6` to
    confirm they're gone from that course's enrolled list too.
+
+---
+
+## PST4: The User Interface (Streamlit GUI)
+
+Replaces the text console with a web-based GUI, using
+[Streamlit](https://streamlit.io/) (pure Python, no HTML/CSS/JS needed).
+`PST4/app/` is carried forward from the completed PST3 (`ScheduleManager`
+and the Model classes aren't rebuilt - the GUI just calls the same
+methods), plus two new methods the GUI needed: `register_new_student`
+(for the registration form) and `find_students_by_name` (for search).
+
+```
+PST4/
+├── main.py                 2 lines: imports and calls gui.main_dashboard.launch()
+├── app/                     carried forward from PST3 (+ register_new_student, find_students_by_name)
+│   ├── user.py
+│   ├── student.py
+│   ├── teacher.py
+│   └── schedule.py
+├── gui/
+│   ├── main_dashboard.py    entry point: page config, sidebar nav, session-state manager
+│   ├── student_pages.py     Student Management page (search, register, add, add to course, remove)
+│   └── roster_pages.py      Daily Roster page (view + check-in form)
+└── data/
+    └── msms.json             persisted data (separate copy from PST3's)
+```
+
+- **`gui/main_dashboard.py`'s `launch()`** sets up the page, then does the
+  one thing that matters most in Streamlit: `if 'manager' not in
+  st.session_state: st.session_state.manager = ScheduleManager()`.
+  Streamlit reruns the *entire* script top-to-bottom on every click, so
+  without this check a new `ScheduleManager` (and a fresh reload of the
+  JSON file) would be created on every single interaction, wiping out
+  anything not yet saved. `st.session_state` is Streamlit's way of
+  keeping one object alive across reruns - the manager is created once,
+  the first time the app loads, and reused after that.
+- **`gui/student_pages.py`** renders the Student Management page. The
+  registration form (from the template) calls
+  `manager.register_new_student(name, instrument)` - a new method, not
+  from PST3 (see below). **Find a Student**, which was a stub in the
+  template, is filled in: type part of a name and the matching students
+  appear, using the new `find_students_by_name` method. Three more forms
+  reuse PST3's manager methods: **Add Student** (`add_student`),
+  **Add Student to Course** (`enroll_student`, built the same way as the
+  template's check-in form) and **Remove Student** (`remove_student`, with
+  a confirmation tick box). Their dropdowns show `id - name` so two
+  students with the same name can be told apart.
+- **`gui/roster_pages.py`** has two parts: a day picker that displays that
+  day's lessons in a table (built from PST3's `get_lessons_for_day`,
+  rendered with `st.dataframe`), and a check-in form with dropdowns
+  populated from `manager.students`/`manager.courses`, calling PST3's
+  existing `manager.check_in(student_id, course_id)`.
+
+### How to run
+
+Needs `streamlit` and `pandas` installed (`pip install streamlit pandas`).
+Like PST3, it loads `data/msms.json` using a path relative to wherever
+it's launched from, so run it from inside `PST4/`:
+
+```
+cd PST4
+streamlit run main.py
+```
+
+This starts a local web server and opens the app in your browser
+(normally at `http://localhost:8501`).
+
+### `register_new_student` - a method not given in any PST3 template
+
+The GUI's registration form calls `manager.register_new_student(name,
+instrument)`, expecting it to return the new student on success, or
+`None`/falsy if "a teacher for that instrument might not be available."
+This method doesn't exist anywhere in PST1-PST3 - it had to be designed
+from scratch to match what the GUI expects:
+
+```python
+def register_new_student(self, name, instrument):
+    # look for a course that already teaches this instrument
+    matching_course = None
+    for course in self.courses:
+        if course.instrument.strip().lower() == instrument.strip().lower():
+            matching_course = course
+            break
+    if not matching_course:
+        return None   # nothing created - no half-registered student left behind
+    student = StudentUser(self.next_student_id, name)
+    ...
+    return student
+```
+
+The key design decision: the instrument check happens **before** creating
+the student, not after. If no course teaches that instrument, the method
+returns `None` immediately without touching `self.students` at all - so a
+failed registration never leaves a "ghost" student sitting in the data
+with nowhere to be enrolled.
+
+### Design choices and assumptions
+
+- **The PST3 `app/` folder is reused, not rewritten.** The spec says to
+  build on "the `ScheduleManager` you perfected in PST3" - the GUI is a
+  new layer on top, not a redo of the business logic.
+- **`register_new_student` matches by course instrument, not teacher
+  directly**, even though the GUI's error message mentions "a teacher."
+  Since every `Course` requires a `teacher_id`, "a course exists for this
+  instrument" and "a teacher is available for this instrument" are
+  effectively the same check here - there's no course without a teacher.
+- **PST4 has its own copy of `data/msms.json`**, separate from PST3's.
+  Running PST4 does not affect your PST3 data or vice versa.
+- **"Find a Student" was a stub in the given template** (just a heading
+  and `# ...`). The brief only requires the registration form, but the
+  search was filled in so the page isn't left with an empty section.
+  "Payments (stub)" is left as the template has it - explicitly deferred
+  to PST5.
+- **The search results are drawn last.** Streamlit draws the page top to
+  bottom, so a table drawn above the registration form would not show a
+  student registered a moment later. A `st.container()` reserves the spot
+  under the search box and is filled in after the form has run.
+- **The GUI files follow the given templates closely.** The template code
+  and comments are kept as they were, with additions only where the
+  template left a gap (the roster table and the search).
+
+### How to test
+
+Run `streamlit run main.py` from inside `PST4/`, then in the browser:
+1. On **Student Management**, register a student with an instrument that
+   has a matching course (e.g. "Piano") - should show a success message.
+2. Try registering with an instrument that has no course (e.g. "Drums")
+   - should show an error and *not* create a student (check
+   `data/msms.json` to confirm `next_student_id` didn't advance).
+3. Switch to **Daily Roster**, pick a day with lessons (e.g. Monday) -
+   confirm the table shows the right course/teacher/room.
+4. Use the check-in form to check a student into a course they're
+   enrolled in - confirm the success message and that `data/msms.json`
+   gained a new attendance record.
+5. On **Student Management**, type part of a name into "Search by name"
+   - matching students (and their course IDs) should appear below it.
+6. With a name still in the search box, register a student with that name
+   - the search results should update to include them.
+7. Use **Add Student**, then **Add Student to Course** to put them in a
+   course, then **Remove Student** (tick the box) and confirm they are gone
+   from the search and from that course in `data/msms.json`.
